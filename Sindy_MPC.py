@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Oct 10 15:51:18 2024
+In this coda, The SINDYc algoritm has been integrated as system identification 
+for MPC controller. The first part of the code concerns the system 
+identification by simulating the ODE and then using SINDYc to find a 
+parsimonoius model.
+
+The second part concerns the MPC to control the voltage at bus 2 in the
+power grids, Bc has been used as control variable.
 
 @author: andre
 """
-
 import numpy as np
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
@@ -21,7 +27,9 @@ import re
 import io
 import contextlib
 
-#%% training
+#%% First Part: system identification SINDYc
+
+# training
 # Generating random step data for Bc
 
 def generate_random_step_function_Bc(duration=30, max_value=0.2, min_value=-0.2):
@@ -99,7 +107,7 @@ def equations(x):
 # Initial condition
 x0 = [0, 0, 1]
 
-x_0 = fsolve(equations, x0)
+x_0 = fsolve(equations, x0) #Initial point
 
 
 start = 0
@@ -110,7 +118,8 @@ dt = 0.001
 # Generate the time vector
 t_train = np.arange(start, stop, dt)
 
-solution = odeint(system, x_0, t_train)
+#Solution ODE
+solution = odeint(system, x_0, t_train) 
 
 Pd_values_test = np.array([Pd(ti, times_Pd, values_Pd) for ti in t_train])
 Bc_values_test = np.array([Bc(ti, times_Bc, values_Bc) for ti in t_train])
@@ -141,6 +150,7 @@ plt.show()
 feature_names = ['x1', 'x2', 'x3', 'Pd', 'u']
 opt = ps.STLSQ(threshold=0.1)
 
+#Define feature library
 poly_lib = ps.PolynomialLibrary(degree=2)
 fourier_lib = ps.FourierLibrary(n_frequencies=1)
 combined_lib = poly_lib + fourier_lib
@@ -150,7 +160,7 @@ u_values = np.vstack((Pd_values_test, Bc_values_test)).T
 # Fit the model
 model.fit(solution, t=dt, u=u_values)
 
-# Function to get the model as a string
+# Function to get the model as a string (for MPC later)
 def sindy_print_to_str(model):
     f = io.StringIO()
     with contextlib.redirect_stdout(f):
@@ -190,7 +200,7 @@ basis_functions = combined_lib.get_feature_names()
 
 
 
-# Simulation with SINDy
+# Simulation with SINDy to compare with ODE integration
 x_sindy = model.simulate(solution[0], t_train, u=u_values)
 
 t_train1 = t_train[1:]
@@ -207,6 +217,8 @@ plt.grid(True)
 plt.show()
 
 #%% TESTING
+# Frstly, we run a new model with new random inputs and the we used
+# the SINDYc model found before to compare the result
 def generate_random_step_function_Bc(duration=60, max_value=0.2, min_value=-0.2):
     num_steps = np.random.randint(7, 10)
     times = np.sort(np.random.uniform(0, duration, num_steps))
@@ -283,6 +295,7 @@ dt = 0.001
 
 t_train = np.arange(start, stop, dt)
 
+#Simulate again ODE (different from Training)
 solution = odeint(system, x_0, t_train)
 
 Pd_values_test = np.array([Pd(ti, times_Pd, values_Pd) for ti in t_train])
@@ -309,6 +322,8 @@ plt.grid()
 plt.show()
 
 u_values_test = np.vstack((Pd_values_test, Bc_values_test)).T
+
+# Testing SINDYc model
 x_sindy_test = model.simulate(solution[0], t_train, u=u_values_test)
 
 t_train1 = t_train[1:]
@@ -336,6 +351,7 @@ plt.grid(True)
 plt.show()
 
 #%%MPC
+# Here, the SINDYc + MPC is tested
 
 def string_to_casadi(expr_str, variables):
     var_dict = {var.name(): var for var in variables}

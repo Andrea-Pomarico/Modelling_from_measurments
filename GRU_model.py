@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 19 10:37:41 2024
+
+In this code, the GRU is trained and tested. This code takes as input
+the training data from 2_buses_test code and train the algorithm.
+With json the GRU is saved and will be tested in Test_GRU_only_voltage 
+and Test_GRU_ciclo (cycle).
 
 @author: andre
 """

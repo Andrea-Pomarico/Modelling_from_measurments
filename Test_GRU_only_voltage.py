@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Sep 20 10:56:34 2024
+This code takes as input the GRU model and test it with a new simulation
 
 @author: andre
 """
@@ -14,6 +14,7 @@ import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 import json
 
+#%% Generating testing data
 def generate_random_step_function_Bc(duration=3000, max_value=0.2, min_value=-0.2):
     num_steps = np.random.randint(20, 100)
     times = np.sort(np.random.uniform(0, duration, num_steps))
@@ -88,6 +89,8 @@ for train in range(1):
 
     Results_matrix = np.column_stack((Pd_values_test, Bc_values_test, solution))
 
+# GRU test
+# Scaling
     scaler_input = MinMaxScaler()
     scaler_output = MinMaxScaler()
 
@@ -125,7 +128,7 @@ for train in range(1):
             out, _ = self.gru(x, h0)
             out = self.fc(out[:, -1, :])  
             return out
-
+# load the best model
     with open('best_hyperparameters.json', 'r') as f:
         best_params = json.load(f)
 
@@ -142,7 +145,7 @@ for train in range(1):
 
     predictions_descaled = scaler_output.inverse_transform(predictions_np)
     true_values_aligned = scaler_output.inverse_transform(outputs_seq.numpy())
-
+# COmpute the max error
     max_error = np.max(np.abs(predictions_descaled - true_values_aligned))
     print(f'Max Error: {max_error:.6f}')
 
@@ -156,6 +159,6 @@ for train in range(1):
     plt.xlim(0, len(predictions_descaled))
     plt.grid()
     plt.show()
-
+# Compute the MAE
     MAE = np.mean(np.abs(predictions_descaled - true_values_aligned) / np.abs(true_values_aligned)) * 100
     print(f'MAE%: {MAE:.2f}%')

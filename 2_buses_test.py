@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep 16 11:02:52 2024
-
+In this code, the data to train the NN are generated. 
+The output is results_matrix_100_100
 @author: andre
 """
 import numpy as np
