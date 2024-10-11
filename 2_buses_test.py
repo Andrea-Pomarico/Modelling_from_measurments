@@ -9,7 +9,6 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from scipy.optimize import fsolve
 
-# Generazione dei dati a scalini casuali per Bc
 def generate_random_step_function_Bc(duration=1000, max_value=0.2, min_value=-0.2):
     num_steps = np.random.randint(20, 100)
     times = np.sort(np.random.uniform(0, duration, num_steps))
@@ -18,7 +17,6 @@ def generate_random_step_function_Bc(duration=1000, max_value=0.2, min_value=-0.
     values = np.concatenate([values, [values[-1]]])
     return times, values, num_steps
 
-# Generazione dei dati a scalini casuali per Pd
 def generate_random_step_function_Pd(duration=1000, max_value=0.4, min_value=-0.4):
     num_steps = np.random.randint(20, 100)
     times = np.sort(np.random.uniform(0, duration, num_steps))
@@ -27,7 +25,6 @@ def generate_random_step_function_Pd(duration=1000, max_value=0.4, min_value=-0.
     values = np.concatenate([values, [values[-1]]])
     return times, values, num_steps
 
-# Funzione Bc utilizzando dati a scalini casuali
 def Bc(t, times, values):
     if t < times[0]:
         return values[0]
@@ -36,7 +33,6 @@ def Bc(t, times, values):
             return values[i]
     return values[-1]
 
-# Funzione Pd utilizzando dati a scalini casuali
 def Pd(t, times, values):
     if t < times[0]:
         return values[0]
@@ -45,7 +41,6 @@ def Pd(t, times, values):
             return values[i]
     return values[-1]
 
-# Inizializzazione
 for train in range(1):
     # Parametri
     V1 = 1
@@ -54,16 +49,14 @@ for train in range(1):
     Dl = 1
     tau = 1
     k = 0.25
-    xl = 0.5  # Costante
+    xl = 0.5  
     
-    # Generazione dei dati a scalini casuali
     duration_Bc = 1000
     times_Bc, values_Bc, num_steps_Bc = generate_random_step_function_Bc(duration=duration_Bc)
     print(num_steps_Bc)
     duration_Pd = 1000
     times_Pd, values_Pd, num_steps_Pd = generate_random_step_function_Pd(duration=duration_Pd)
     print(num_steps_Pd)
-    # Definire il sistema dinamico
     def system(x, t):
         return [
             1/M * (Pd(t, times_Pd, values_Pd) - (V1 * x[2] / xl) * np.sin(x[1]) - Dg * x[0]),
@@ -88,9 +81,7 @@ for train in range(1):
     # Solve the system of equations with fsolve
     x_0 = fsolve(equations, x0)
     
-    # Simulazione temporale
-    t = np.linspace(0, 1000, 2000)  # 1000 punti temporali da 0 a 50 secondi
-    # Risolvi le equazioni differenziali
+    t = np.linspace(0, 1000, 2000) 
     solution = odeint(system, x_0, t)
     
     # Generate Pd and Bc values for testing
@@ -99,21 +90,18 @@ for train in range(1):
     
     Results_matrix = np.column_stack((Pd_values_test, Bc_values_test, solution))  # prime due colonne gli input, ultime 3 output
 
-    # Visualizza la soluzione
     plt.plot(t, Results_matrix[:, -3:])
     plt.xlabel('Time [s]')
     plt.legend(['omega', 'delta', 'v'])
     plt.grid()
     plt.show()
     
-    # Visualizza Pd
     plt.plot(t, Results_matrix[:, 0])
     plt.xlabel('Time [s]')
     plt.legend(['Pd'])
     plt.grid()
     plt.show()
     
-    # Visualizza Bc
     plt.plot(t, Results_matrix[:, 1])
     plt.xlabel('Time [s]')
     plt.legend(['Bc'])
